@@ -1,1 +1,1 @@
-# DecentralizedVotingApp
+The DecentralizedVotingApp project leverages Rust and the Actix-web framework to establish a robust backend server. This server's role is pivotal in managing user data, tracking and tallying votes, and facilitating seamless interaction between the frontend components and the backend logistics. The repository encapsulates the essential functionalities required to handle HTTP requests efficiently, thus ensuring secure and scalable management of the voting process in a decentralized environment.
