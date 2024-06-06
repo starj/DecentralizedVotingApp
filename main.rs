@@ -1,4 +1,4 @@
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{web, App, HttpResponse, HttpServer, Responder, http::StatusCode};
 use serde::{Deserialize, Serialize};
 use std::env;
 use dotenv::dotenv;
@@ -52,20 +52,37 @@ async fn get_users() -> impl Responder {
     ])
 }
 
+// Custom error response
+async fn custom_error_404() -> impl Responder {
+    HttpResponse::NotFound().json("Not Found")
+}
+
 #[actix_web::main]
-async fn main() -> std::io::Result<()> {
+async fn main() {
     dotenv().ok();
 
-    let server_url = env::var("SERVER_URL").expect("SERVER_URL not found.");
+    let server_url = match env::var("SERVER_URL") {
+        Ok(url) => url,
+        Err(_) => {
+            eprintln!("SERVER_URL not found. Setting default localhost:8080");
+            String::from("127.0.0.1:8080")
+        },
+    };
 
-    HttpServer::new(|| {
+    let server = HttpServer::new(|| {
         App::new()
             .route("/vote", web::post().to(vote))
             .route("/votes", web::get().to(get_votes))
             .route("/user", web::post().to(add_user))
             .route("/users", web::get().to(get_users))
+            .default_service(web::route().to(custom_error_404)) // Handle 404 errors
     })
-    .bind(server_url)?
-    .run()
-    .await
+    .bind(&server
+        Ok(server) => {
+            if let Err(e) = server.run().await {
+                eprintln!("Server error: {}", e);
+            }
+        },
+        Err(e) => eprintln!("Failed to bind server: {}", e),
+    }
 }
