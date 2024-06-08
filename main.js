@@ -11,6 +11,7 @@ const votingContract = new web3.eth.Contract(contractABI, CONTRACT_ADDRESS);
 async function authenticateUser(username, password) {
     try {
         console.log('Authenticating user:', username);
+        // The authentication logic should be implemented here
         return true;
     } catch (error) {
         console.error('Error during authentication:', error);
@@ -45,6 +46,17 @@ function displayVoteResults(voteResults) {
     console.log('Vote Results:', voteResults);
 }
 
+// New functionality to fetch and display the vote count for a specific candidate
+async function fetchCandidateVoteCount(candidateId) {
+    try {
+        const voteCount = await votingContract.methods.getVotesForCandidate(candidateId).call();
+        console.log(`Vote count for candidate ${candidateId}:`, voteCount);
+        return voteCount;
+    } catch (error) {
+        console.error(`Error fetching vote count for candidate ${candidateId}:`, error);
+    }
+}
+
 async function main() {
     const username = 'user';
     const password = 'password';
@@ -60,6 +72,9 @@ async function main() {
 
     const voteDetails = { candidateId: 'candidate1', vote: 1 };
     await submitVote(voteDetails, userAccount);
+
+    // Fetch and display the vote count for a specific candidate
+    await fetchCandidateVoteCount(voteDetails.candidateId);
 
     const voteResults = await fetchVoteData();
     displayVoteResults(voteResults);
