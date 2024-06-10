@@ -1,0 +1,61 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+.header, .footer {
+  text-align: center;
+  padding: 10px 0;
+}
+.create-vote {
+  border: 1px solid #ccc;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.create-vote h2 {
+  margin-top: 0;
+}
+.participate-vote {
+  border: 1px solid #ccc;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.participate-vote h2 {
+  margin-top: 0;
+}
+.vote-button {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  margin: 5px 0;
+  border: none;
+  cursor: pointer;
+}
+.vote-button:hover {
+  background-color: #45a049;
+}
+.vote-results {
+  border: 1px solid #ccc;
+  padding: 20px;
+}
+.vote-results h2 {
+  margin-top: 0;
+}
+.result-item {
+  margin: 10px 0;
+}
+@media (max-width: 768px) {
+  .container {
+    width: auto;
+    padding: 10px;
+  }
+  .create-vote, .participate-vote, .vote-results {
+    border: none;
+    padding: 10px;
+  }
+}
