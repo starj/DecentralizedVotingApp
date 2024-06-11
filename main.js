@@ -46,7 +46,6 @@ function displayVoteResults(voteResults) {
     console.log('Vote Results:', voteResults);
 }
 
-// New functionality to fetch and display the vote count for a specific candidate
 async function fetchCandidateVoteCount(candidateId) {
     try {
         const voteCount = await votingContract.methods.getVotesForCandidate(candidateId).call();
@@ -54,6 +53,19 @@ async function fetchCandidateVoteCount(candidateId) {
         return voteCount;
     } catch (error) {
         console.error(`Error fetching vote count for candidate ${candidateId}:`, error);
+    }
+}
+
+async function registerNewCandidate(candidateName, userAccount) {
+    try {
+        if (!userAccount) {
+            console.error('User account is not provided for registering new candidate');
+            return;
+        }
+        const receipt = await votingContract.methods.registerCandidate(candidateName).send({ from: userAccount });
+        console.log(`New candidate "${candidateName}" registered!`, receipt);
+    } catch (error) {
+        console.error(`Error registering new candidate "${candidateName}":`, error);
     }
 }
 
@@ -70,10 +82,11 @@ async function main() {
     const accounts = await web3.eth.getAccounts();
     const userAccount = accounts[0];
 
+    await registerNewCandidate('New Candidate', userAccount);
+
     const voteDetails = { candidateId: 'candidate1', vote: 1 };
     await submitVote(voteDetails, userAccount);
 
-    // Fetch and display the vote count for a specific candidate
     await fetchCandidateVoteCount(voteDetails.candidateId);
 
     const voteResults = await fetchVoteData();
