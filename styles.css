@@ -8,24 +8,21 @@ body, html {
   margin: 0 auto;
   padding: 20px;
 }
-.header, .footer {
+.header,
+.footer {
   text-align: center;
   padding: 10px 0;
 }
-.create-vote {
+.create-vote,
+.participate-vote,
+.vote-results {
   border: 1px solid #ccc;
   padding: 20px;
   margin-bottom: 20px;
 }
-.create-vote h2 {
-  margin-top: 0;
-}
-.participate-vote {
-  border: 1px solid #ccc;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-.participate-vote h2 {
+.create-vote h2,
+.participate-vote h2,
+.vote-results h2 {
   margin-top: 0;
 }
 .vote-button {
@@ -39,13 +36,6 @@ body, html {
 .vote-button:hover {
   background-color: #45a049;
 }
-.vote-results {
-  border: 1px solid #ccc;
-  padding: 20px;
-}
-.vote-results h2 {
-  margin-top: 0;
-}
 .result-item {
   margin: 10px 0;
 }
@@ -54,7 +44,9 @@ body, html {
     width: auto;
     padding: 10px;
   }
-  .create-vote, .participate-vote, .vote-results {
+  .create-vote,
+  .participate-vote,
+  .vote-results {
     border: none;
     padding: 10px;
   }
