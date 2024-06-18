@@ -4,58 +4,58 @@ use mongodb::bson::{doc, Document};
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Vote {
+struct Ballot {
     pub id: Option<bson::oid::ObjectId>,
     pub title: String,
     pub description: String,
-    pub votes: i32,
+    pub vote_count: i32,
 }
 
-impl Vote {
-    async fn initialize_collection() -> Collection<Vote> {
-        let mongo_uri = env::var("MONGO_URI").expect("You must set the MONGO_URI environment variable!");
-        let client_options = ClientOptions::parse(&mongo_uri).await.expect("Failed to parse options");
-        let client = Client::with_options(client_options).expect("Failed to initialize client");
-        client.database("DecentralizedVotingApp").collection::<Vote>("votes")
+impl Ballot {
+    async fn get_collection() -> Collection<Ballot> {
+        let mongo_uri = env::var("MONGO_URI").expect("MONGO_URI environment variable not set!");
+        let client_options = Client::parse_uri(&mongo_uri).await.expect("Failed to parse MongoDB URI");
+        let client = Client::with_options(client_options).expect("Failed to initialize MongoDB client");
+        client.database("DecentralizedVotingApp").collection::<Ballot>("ballots")
     }
 
-    pub async fn create_new_vote(title: String, description: String) -> mongodb::error::Result<()> {
-        let collection = Self::initialize_collection().await;
-        let new_vote = Vote {
+    pub async fn create(title: String, description: String) -> mongodb::error::Result<()> {
+        let collection = Self::get_collection().await;
+        let new_ballot = Ballot {
             id: None,
             title,
             description,
-            votes: 0,
+            vote_count: 0,
         };
-        collection.insert_one(new_vote, None).await?;
+        collection.insert_one(new_ballot, None).await?;
         Ok(())
     }
 
-    pub async fn get_votes() -> mongodb::error::Result<Vec<Vote>> {
-        let collection = Self::initialize_collection().await;
+    pub async fn retrieve_all() -> mongodb::error::Result<Vec<Ballot>> {
+        let collection = Self::get_collection().await;
         let cursor = collection.find(None, None).await?;
-        let votes: Vec<Vote> = cursor.try_collect().await?;
-        Ok(votes)
+        let ballots: Vec<Ballot> = cursor.try_collect().await?;
+        Ok(ballots)
     }
 
-    pub async fn update_vote_details(id: bson::oid::ObjectId, title: String, description: String) -> mongodb::error::Result<()> {
-        let collection = Self::initialize_collection().await;
+    pub async fn update_details(id: bson::oid::ObjectId, title: String, description: String) -> mongodb::error::Result<()> {
+        let collection = Self::get_collection().await;
         let filter = doc! { "_id": id };
         let update_doc = doc! { "$set": { "title": title, "description": description }};
         collection.update_one(filter, update_doc, None).await?;
         Ok(())
     }
 
-    pub async fn delete_vote(id: bson::oid::ObjectId) -> mongodb::error::Result<()> {
-        let collection = Self::initialize_collection().await;
+    pub async fn remove(id: bson::oid::ObjectId) -> mongodb::error::Result<()> {
+        let collection = Self::get_collection().await;
         collection.delete_one(doc! { "_id": id }, None).await?;
         Ok(())
     }
 
-    pub async fn vote(id: bson::oid::ObjectId) -> mongodb::error::Result<()> {
-        let collection = Self::initialize_collection().await;
+    pub async fn cast_vote(id: bson::oid::ObjectId) -> mongodb::error::Result<()> {
+        let collection = Self::get_collection().await;
         let filter = doc! { "_id": id };
-        collection.update_one(filter, doc! {"$inc": {"votes": 1}}, None).await?;
+        collection.update_one(filter, doc! {"$inc": {"vote_count": 1}}, None).await?;
         Ok(())
     }
 }
@@ -64,13 +64,10 @@ impl Vote {
 async fn main() {
     dotenv::dotenv().ok();
 
-    // Example usage
-    // Remember to handle results in real use cases
-    if let Ok(_) = Vote::create_new_vote("Title".into(), "Description".into()).await {
-        println!("Vote created successfully.");
+    if let Ok(_) = Ballot::create("Title".into(), "Description".into()).await {
+        println!("Ballot created successfully.");
     }
-    if let Ok(votes) = Vote::get_votes().await {
-        println!("{:?}", votes);
+    if let Ok(ballots) = Ballot::retrieve_all().await {
+        println!("{:?}", ballots);
     }
-    // Place here the functionality to update, delete, and increment vote counts as needed.
 }
