@@ -1,10 +1,10 @@
 use async_trait::async_trait;
-use mongodb::{bson::{doc, Document}, Client, Collection, options::ClientOptions};
+use mongodb::{bson::{doc}, Client, Collection};
 use serde::{Deserialize, Serialize};
-use std::env;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use argon2::{self, Config};
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct User {
@@ -20,7 +20,7 @@ trait Cache<T> {
 }
 
 struct UserCache {
-    users: Arc<Mutex<std::collections::HashMap<String, User>>>,
+    users: Arc<Mutex<HashMap<String, User>>>,
 }
 
 #[async_trait]
@@ -52,11 +52,28 @@ async fn get_database() -> Collection<User> {
     // Your existing implementation remains unchanged
 }
 
-async fn register_user(username: &str, password: &str, email: &str) -> Result<(), String> {
-    // Your existing implementation remains unchanged
+async fn register_user(username: &str, password: &examplen(String), email: &str, global_cache: Arc<UserCache>) -> Result<(), String> {
+    // Before proceeding to register, check if the user already exists in the cache to prevent unnecessary DB calls.
+    if global_cache.get(username).await.is_some() {
+        return Err("User already exists".to_string());
+    }
+    
+    // Assuming you have a mechanism to insert into your MongoDB collection here, which sets the user.
+    // Let's say the user is successfully inserted:
+    let hashed_password = User::hash_password(password).await;
+    let user = User {
+        username: username.to_string(),
+        password: hashed_password,
+        email: email.to_string(),
+    };
+    
+    // Update cache after successful registration
+    global_cache.set(username, user.clone()).await;
+    
+    Ok(())
 }
 
-async fn get_user_info(username: &str, global_cache: Arc<UserCache>) -> Result<User, String> {
+async fn get_user_info(username: &str, global_cache: Arc<UserManager>) -> Result<User, String> {
     // Check cache first
     if let Some(user) = global_cache.get(username).await {
         return Ok(user);
@@ -75,11 +92,11 @@ async fn get_user_info(username: &str, global_cache: Arc<UserCache>) -> Result<U
     }
 }
 
+#[tokio::main]
 async fn main() {
     let global_cache = Arc::new(UserCache {
-        users: Arc::new(Mutex::new(std::collections::HashMap::new())),
+        users: Arc::new(Mutex::new(HashMap::new())),
     });
 
-    // Your existing application logic, for example:
-    // let user_info_result = get_user_info("some_username", global_cache.clone()).await;
+    // Example registration and retrieval from cache to demonstrate approach
 }
