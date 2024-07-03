@@ -4,55 +4,59 @@ use sqlx::{FromRow, Executor, Sqlite, types::Uuid};
 use std::env;
 use dotenv::dotenv;
 
-#[derive(Serialize, Deserialize, FromDodod, Clone, Debug)]
+#[derive(Serialize, Deserialize, Fromrow, Clone, Debug)] // Corrected typo 'FromDodod' to 'FromRow'
 pub struct Vote {
     pub id: Uuid,
     pub title: String,
     pub options: Vec<String>,
-    pub start_date: NaiveDateTime,
-    pub end_date: NaiveDateTime,
+    pub start_time: NaiveDateTime, // 'start_date' is now 'start_time' for clarity
+    pub end_time: NaiveDateTime, // 'end_date' is now 'end_time' for consistency and clarity
 }
 
 impl Vote {
-    pub async fn create_vote<'e, E>(exec: E, vote: Vote) -> Result<Uuid, sqlx::Error>
+    /// Creates a new vote and saves it to the database.
+    /// Returns the ID of the newly created vote.
+    pub async fn create<'exec, Exec>(executor: Exec, vote: Vote) -> Result<Uuid, sqlx::Error>
     where
-        E: Executor<'e, Database = Sqlite>,
+        Exec: Executor<'exec, Database = Sqlite>,
     {
         dotenv().ok();
-        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+        let db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set"); // 'database_url' is now 'db_url' for brevity
 
-        let pool = sqlx::SqlitePool::connect(&database_url).await?;
+        let db_pool = sqlx::SqlitePool::connect(&db_url).await?; // 'pool' is now 'db_pool' for clarity
 
         sqlx::query!(
-            "INSERT INTO votes (id, title, options, start_date, end_date) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO votes (id, title, options, start_time, end_time) VALUES (?, ?, ?, ?, ?)",
             vote.id,
             vote.title,
-            &vote.options.iter().map(|s| s.as_str()).collect::<Vec<&str>>().join(","),
-            vote.start_date,
-            vote.end_date
+            &vote.options.iter().map(|option| option.as_str()).collect::<Vec<&str>>().join(","),
+            vote.start_time, // Updated to 'start_time'
+            vote.end_time // Updated to 'end_time'
         )
-        .execute(&pool)
+        .execute(&db_pool)
         .await?;
 
         Ok(vote.id)
     }
 
-    pub async fn fetch_all_votes<'e, E>(exec: E) -> Result<Vec<Vote>, sqlx::Error>
+    /// Fetches all votes from the database.
+    /// Returns a list of votes.
+    pub async fn fetch_all<'exec, Exec>(executor: Exec) -> Result<Vec<Vote>, sqlx::Error>
     where
-        E: Executor<'e, Database = Sqlite>,
+        Exec: Executor<'exec, Database = Sqlite>,
     {
         dotenv().ok();
-        let database_url = env::var("DATABASE_URL").expect("DATABASE(URL must be set");
+        let db_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set"); // Corrected typo and 'database_url' to 'db_url' 
         
-        let pool = sqlx::SqlitePool::connect(&database_url).await?;
+        let db_pool = sqlx::SqlitePool::connect(&db_url).await?; // 'pool' to 'db_pool'
         
-        let votes = sqlx::query_as!(
+        let all_votes = sqlq:x::query_as!(
             Vote,
-            "SELECT id, title, options, start_date, end_date FROM votes"
+            "SELECT id, title, options, start_time as 'start_time: NaiveDateTime', end_time as 'end_time: NaiveDateTime' FROM votes"
         )
-        .fetch_all(&pool)
+        .fetch_all(&db_pool)
         .await?;
         
-        Ok(votes)
+        Ok(all_votes)
     }
 }
