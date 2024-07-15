@@ -1,30 +1,10 @@
-// Add this to your Cargo.toml
-// cached = "0.26.2"
+// No direct code change, but a conceptual strategy to preload cache
+// Assuming you have a function to identify popular polls or anticipate a spike in requests
+async fn preload_popular_polls(conn: &PgConnection) {
+    let popular_poll_ids = get_popular_poll_ids(conn).await; // Implement this based on your app's logic
 
-use cached::proc_macro::cached;
-use cached::SizedCache;
-
-#[derive(Debug, Serialize, Deserialize, Queryable)]
-pub struct PollResult {
-    poll_id: i32,
-    option: String,
-    votes: i32,
-}
-
-#[cached(
-    type = "SizedCache<i32, Vec<PollResult>>",
-    create = "{ SizedCache::with_size(100) }",
-    convert = r#"{ poll_id }"#,
-    result = true
-)]
-pub async fn get_poll_results(conn: &PgConnection, poll_id: i32) -> diesel::QueryResult<Vec<PollResult>> {
-    use schema::votes;
-
-    let results = votes::table
-        .filter(votes::poll_id.eq(poll_id))
-        .select((votes::poll_id, votes::choice, diesel::dsl::count(votes::id)))
-        .group_by(votes::choice)
-        .load::<PollResult>(conn);
-
-    results
+    for poll_id in popular_pollids {
+        // This call will cache results for future use without altering external API usage
+        let _ = get_poll_results(conn, poll_id).await;
+    }
 }
