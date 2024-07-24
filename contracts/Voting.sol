@@ -17,23 +17,25 @@ contract DecentralizedVotingApp {
     event Voted(uint voteId, uint candidateId, address voter);
 
     function createVote(string memory _description, uint[] memory _candidateList) public {
-        voteCount ++;
+        require(_candidateList.length > 0, "Candidate list must contain at least one candidate.");
+        voteCount++;
         Vote storage newVote = votes[voteCount];
         newVote.id = voteCount;
         newVote.description = _description;
         newVote.exists = true;
-        for(uint i = 0; i < _candidateList.length; i++) {
+        for (uint i = 0; i < _candidateList.length; i++) {
+            require(_candidateList[i] != 0, "Candidate ID 0 is reserved and cannot be explicitly used.");
             newVote.candidateVotes[_candidateList[i]] = 0;
             newVote.candidateList.push(_candidateList[i]);
         }
 
-        emit VoteCreated(voteCount, _evoteCount, _description);
+        emit VoteCreated(voteCount, _description);
     }
 
     function castVote(uint _voteId, uint _candidateId) public {
         require(votes[_voteId].exists, "Vote does not exist.");
         require(!voterHasVoted[msg.sender][_voteId], "You have already voted in this vote.");
-        require(votes[_voteId].candidateVotes[_candidateId] != 0 || _candidateId == 0, "Candidate does not exist in this vote.");
+        require(_isCandidateInVote(_voteId, _candidateId), "Candidate does not exist in this vote.");
 
         votes[_voteId].candidateVotes[_candidateId]++;
         voterHasVoted[msg.sender][_voteId] = true;
@@ -44,12 +46,22 @@ contract DecentralizedVotingApp {
     function getVoteResults(uint _voteId) public view returns (uint[] memory, uint[] memory) {
         require(votes[_voteId].exists, "Vote does not exist.");
         uint[] memory ids = new uint[](votes[_voteId].candidateList.length);
-        uint[] memory voteCounts = new half[](votes[_voteId].candidateList.length);
+        uint[] memory voteCounts = new uint[](votes[_voteId].candidateList.length);
 
-        for(uint i = 0; i < votes[_voteId].candidateList.length; i++){
+        for (uint i = 0; i < votes[_voteId].candidateList.length; i++) {
             ids[i] = votes[_voteId].candidateList[i];
-            voteCounts[i] = votes[_voteId].candidateVotes[votes[_voteId].candidateList[i]];
+            voteCounts[i] = votes[_voteId].candidateVotes[ids[i]];
         }
         return (ids, voteCounts);
+    }
+    
+    // Helper function to check if a candidate is in a particular vote
+    function _isCandidateInVote(uint _voteId, uint _candidateLexId) private view returns (bool) {
+        for (uint i = 0; i < votes[_voteId].candidateList.length; i++) {
+            if (votes[_voteId].candidateList[i] == _candidateId) {
+                return true;
+            }
+        }
+        return false;
     }
 }
